@@ -1,66 +1,119 @@
-from tkinter import filedialog
+from PyQt5.QtWidgets import QFileDialog
 import csv
+import json
+import pickle
 from wagecalc.data import Shift
+from wagecalc.data import PayRate
+from wagecalc.data import PayPeriod
+from datetime import datetime
+from datetime import date
 
-def import_data(filename="hourstracker.csv"):
-    # source data is from Hours Tracker App, so we have a specific format to read from. Makes things easier/predictable
-    # filename=filedialog.askopenfilename()
+def file_import_shifts(filename):
     all_shifts = []
     with open(filename,'r') as f:
         lines = csv.reader(f, delimiter=',', quotechar='"')
         ref = 0
         next(lines)
-        for row in lines:
-            ref += 1
+        for fields in lines:
             shift_line = {
-                "ref": ref,
-                "date": row[1][:10],
-                "start": row[1][11:],
-                "end": row[2][11:],
-                # calculate length of shift here at import time, or later (outside of this loop)?
-                # now would be cleaner?
+                "start": datetime.strptime(fields[1], '%d/%m/%Y %H:%M'),
+                "end": datetime.strptime(fields[2], '%d/%m/%Y %H:%M'),
             }
-            shift_obj=Shift(shift_line)
-            shift_length=shift_obj.calc_length()
-            shift_line['length'] = shift_length
-            all_shifts.append(shift_line)
+            shift_obj=Shift(shift_line['start'],shift_line['end'],0)
+            all_shifts.append(shift_obj)
     f.close()
     return all_shifts
 
+def file_load_shifts(filename="wagecalc/data/shifts.pickle"):
+    try:
+        with open(filename,'rb') as f:
+            shifts = pickle.load(f)
+        f.close()
+        return shifts
+    except:
+        return
 
-# Old functions to to read/write data from my own text file storage. Replaced by an improved import, direct from Hours Tracker file
-# def import_data():
-#     all_shifts=read_all()
-#     return all_shifts
-# def read_all(): #reads the whole file into a list called 'all_shifts'
-#     all_shifts=[]
-#     shift={'ref' : '',
-#            'date' : '',
-#            'start' : '',
-#            'finish' : '',
-#            'length' : ''
-#         }
-#     with open("hourstracker.csv", "r+") as f:
-#         lines = csv.reader(f,delimiter=',',quotechar='"')
-#         ref=0
-#         next(lines)
-#         for row in lines: #iterate over each line
-#             ref+=1
-#             one_shift = {
-#                 "ref"   : ref,
-#                 "date"  : row[1][:10],
-#                 "start" : row[1][12:],
-#                 "end": row[2][12:]
-#             }
-#             all_shifts.append(one_shift)
-#     f.close()
-#     return all_shifts
-# def write_all():
-#     with open("data.txt","w") as f:
-#         for shift in all_shifts:
-#             f.write(str(shift["start"]) + " " + str(shift["finish"]))
-#             if len(shift)==3:
-#                 f.write(" " + str(shift["total"]))
-#             f.write("\n")
-#     f.close()
+def file_save_shifts(shifts, filename="wagecalc/data/shifts.pickle"):
+    try:
+        with open(filename,'wb') as f:
+            pickle.dump(shifts, f)
+        f.close()
+    except:
+        return
 
+def file_load_payrates(filename="wagecalc/data/payrates.pickle"):
+    #manually creating payrates here for now, will get to adding the gui and proper table / list / storage later
+
+    # dt08a=date(2008,1,1)
+    # dt08b=date(2008,12,31)
+    # dt09a=date(2009,1,1)
+    # dt09b=date(2009,12,31)
+    # dt10a=date(2010,1,1)
+    # dt10b=date(2010,12,31)
+    # dt11a=date(2011,1,1)
+    # dt11b=date(2011,12,31)
+    # dt12a=date(2012,1,1)
+    # dt12b=date(2012,12,31)
+    # dt13a=date(2013,1,1)
+    # dt13b=date(2013,12,31)
+    # dt14a=date(2014,1,1)
+    # dt14b=date(2014,12,31)
+    # dt15a=date(2015,1,1)
+    # dt15b=date(2015,12,31)
+    # dt16a=date(2016,1,1)
+    # dt16b=date(2016,12,31)
+    # dt17a=date(2017,1,1)
+    # dt17b=date(2017,12,31)
+    #
+    # payrate08=PayRate(1,dt08a,dt08b,7.08,9.08)
+    # payrate09=PayRate(2,dt09a,dt09b,7.09,9.09)
+    # payrate10=PayRate(3,dt10a,dt10b,7.10,9.10, True)
+    # payrate11=PayRate(4,dt11a,dt11b,7.11,9.11)
+    # payrate12=PayRate(5,dt12a,dt12b,7.12,9.12)
+    # payrate13=PayRate(6,dt13a,dt13b,7.13,9.13)
+    # payrate14=PayRate(7,dt14a,dt14b,7.14,9.14)
+    # payrate15=PayRate(8,dt15a,dt15b,7.15,9.15)
+    # payrate16=PayRate(9,dt16a,dt16b,7.16,9.16)
+    # payrate17=PayRate(10,dt17a,dt17b,7.4407,9.4802)
+    #
+    # payratelist=[]
+    #
+    # payratelist.append(payrate08)
+    # payratelist.append(payrate09)
+    # payratelist.append(payrate10)
+    # payratelist.append(payrate11)
+    # payratelist.append(payrate12)
+    # payratelist.append(payrate13)
+    # payratelist.append(payrate14)
+    # payratelist.append(payrate15)
+    # payratelist.append(payrate16)
+    # payratelist.append(payrate17)
+    # return payratelist
+    try:
+        with open(filename,'rb') as f:
+            payrates = pickle.load(f)
+        f.close()
+        return payrates
+    except:
+        return
+
+
+def file_save_payrates(payrates, filename="wagecalc/data/payrates.pickle"):
+    try:
+        with open(filename,'wb') as f:
+            pickle.dump(payrates, f)
+        f.close()
+    except:
+        return
+
+def file_load_payperiods():
+    pass
+
+def file_create_payperiods(payperiods, filename="data/payperiods.json"):
+    try:
+        with open(filename[0],'w') as f:
+            json.dump([PayPeriod.__dict__ for PayPeriod in payperiods],f)
+        f.close()
+        return("Successfully generated pay periods")
+    except:
+        return("Failed to generate pay periods")
