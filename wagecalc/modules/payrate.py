@@ -32,15 +32,9 @@ def insert_payrate(self):
     input_nightrate = Decimal(self.newpayrate_nightrate.text())
     input_description = self.newpayrate_description.toPlainText()
 
-    # input_start = datetime.strptime(self.newshift_start.text(),'%H:%M')
-    # input_end = datetime.strptime(self.newshift_end.text(),'%H:%M')
-    # newshift_start = datetime.combine(input_date.date(),input_start.time())
-    # newshift_end = datetime.combine(input_date.date(),input_end.time())
-    # shift_obj=Shift(newshift_start,newshift_end,0)
     payrate_obj=PayRate(input_id,input_datefrom,input_dateto,input_dayrate,input_nightrate,input_description)
-    self.payrates.append(payrate_obj)
+    self.payratelist.append(payrate_obj)
     self.win_newpayrate.close()
-    print(payrate_obj.datefrom)
     refresh_view(self)
 
 def new_payrate(self):
@@ -53,7 +47,7 @@ def new_payrate(self):
 
     newpayrate_group=QtWidgets.QGroupBox("Add a new Pay Rate")
 
-    self.newpayrate_newid=len(self.payrates)+1
+    self.newpayrate_newid=len(self.payratelist)+1
     self.newpayrate_id=QtWidgets.QLineEdit()
     self.newpayrate_id.setText(str(self.newpayrate_newid))
     self.newpayrate_id.setReadOnly(True)
@@ -97,13 +91,13 @@ def new_payrate(self):
 
 def load_data_payrate(self):
     try:
-        return wagecalc.file.file_load_payrates()
+        return wagecalc.file.load_payratelist()
     except:
         self.logbox.error("Pay Rates Failed to Load")
 
 def save_data_payrate(self):
     try:
-        wagecalc.file.file_save_payrates(self.payrates)
+        wagecalc.file.save_payratelist(self.payratelist)
         self.logbox.info("Pay Rates Saved")
     except:
         self.logbox.error("Pay Rates Failed to Save")

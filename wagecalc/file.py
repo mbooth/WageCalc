@@ -8,8 +8,8 @@ from wagecalc.data import PayPeriod
 from datetime import datetime
 from datetime import date
 
-def file_import_shifts(filename):
-    all_shifts = []
+def import_shiftlist(filename):
+    shiftlist = []
     with open(filename,'r') as f:
         lines = csv.reader(f, delimiter=',', quotechar='"')
         ref = 0
@@ -20,11 +20,11 @@ def file_import_shifts(filename):
                 "end": datetime.strptime(fields[2], '%d/%m/%Y %H:%M'),
             }
             shift_obj=Shift(shift_line['start'],shift_line['end'],0)
-            all_shifts.append(shift_obj)
+            shiftlist.append(shift_obj)
     f.close()
-    return all_shifts
+    return shiftlist
 
-def file_load_shifts(filename="wagecalc/data/shifts.pickle"):
+def load_shiftlist(filename="wagecalc/data/shifts.pickle"):
     try:
         with open(filename,'rb') as f:
             shifts = pickle.load(f)
@@ -33,7 +33,7 @@ def file_load_shifts(filename="wagecalc/data/shifts.pickle"):
     except:
         return
 
-def file_save_shifts(shifts, filename="wagecalc/data/shifts.pickle"):
+def save_shiftlist(shifts, filename="wagecalc/data/shifts.pickle"):
     try:
         with open(filename,'wb') as f:
             pickle.dump(shifts, f)
@@ -41,8 +41,8 @@ def file_save_shifts(shifts, filename="wagecalc/data/shifts.pickle"):
     except:
         return
 
-def file_load_payrates(filename="wagecalc/data/payrates.pickle"):
-    #manually creating payrates here for now, will get to adding the gui and proper table / list / storage later
+def load_payratelist(filename="wagecalc/data/payrates.pickle"):
+    #manually creating payratelist here for now, will get to adding the gui and proper table / list / storage later
 
     # dt08a=date(2008,1,1)
     # dt08b=date(2008,12,31)
@@ -91,25 +91,25 @@ def file_load_payrates(filename="wagecalc/data/payrates.pickle"):
     # return payratelist
     try:
         with open(filename,'rb') as f:
-            payrates = pickle.load(f)
+            payratelist = pickle.load(f)
         f.close()
-        return payrates
+        return payratelist
     except:
         return
 
 
-def file_save_payrates(payrates, filename="wagecalc/data/payrates.pickle"):
+def save_payratelist(payratelist, filename="wagecalc/data/payrates.pickle"):
     try:
         with open(filename,'wb') as f:
-            pickle.dump(payrates, f)
+            pickle.dump(payratelist, f)
         f.close()
     except:
         return
 
-def file_load_payperiods():
+def load_payperiodlist():
     pass
 
-def file_create_payperiods(payperiods, filename="data/payperiods.json"):
+def create_payperiodlist(payperiods, filename="data/payperiods.json"):
     try:
         with open(filename[0],'w') as f:
             json.dump([PayPeriod.__dict__ for PayPeriod in payperiods],f)

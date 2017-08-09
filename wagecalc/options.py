@@ -1,6 +1,6 @@
 from datetime import datetime
 
-APPWIDTH = 600
+APPWIDTH = 1000
 APPHEIGHT = 1200
 APPTITLE = "Wage Calculator"
 

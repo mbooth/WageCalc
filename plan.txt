@@ -1,15 +1,9 @@
 Finish payrate.py
-24/7/17 - currently implementing shift edit functions within delegate. Copied most
-from payratetabledelegate, but some need fixing (including DR/NR to Combo boxes)
-
-To include following functions
-    Create Pay Rate
     Delete Pay Rate (To include a check that it's not assigned to a shift)
-    Edit Pay Rate
 
 PayRateTable : List of PayRate Objects in DateFrom or PayRateID order
 View Table for Pay Rates to include how many shifts are at this pay rate, maybe also total time over this pay rate
-Implement payrates into shift object
+Implement payratelist into shift object
 Edit Shift > Pay Rate to link to a dropdown to payrate list, show a table (ComboBox Delegate)
 
 
@@ -21,10 +15,6 @@ An Initialise Routine to load all data from file including :
     Rotas
     Contracts
     etc
-
-PayRate Object  PayRateID, DateFrom, DateTo, DayRate, NightRate
-
-
 
 Shifts > Warning on multiple shifts on one day.
 Shifts > Warning on shifts over x length

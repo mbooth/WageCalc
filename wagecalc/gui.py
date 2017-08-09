@@ -54,7 +54,7 @@ class ToolBar(QtWidgets.QWidget):
         self.setLayout(self.hframe)
         parent.addWidget(self)
 class Module(QtWidgets.QMainWindow):
-    def __init__(self,parent, title="Default",):
+    def __init__(self,parent, title="Default"):
         QtWidgets.QMainWindow.__init__(self)
         self.setWindowTitle(title)
         self.tbar=self.addToolBar("Toolbar")
@@ -105,46 +105,31 @@ class TDatePicker(QtWidgets.QDialog):
     # def updated(self,master):
     #     refresh_view(master)
 
-class ShiftTableDelegate(QtWidgets.QStyledItemDelegate):
-    def __init__(self, master):
-        QtWidgets.QStyledItemDelegate.__init__(self)
+class PayRateComboBoxDelegate(QtWidgets.QStyledItemDelegate):
+    def __init__(self, parent):
+        self.payratelist=parent.payratelist
+        self.shiftlist=parent.shiftlist
+        QtWidgets.QStyledItemDelegate.__init__(self, parent)
 
-    def setEditorData(self, editor, index):
-        value=index.model().data(index,QtCore.Qt.EditRole)
-        if (index.column() == 0): #Date
-            editor.setDate(value)
-        elif (index.column() == 1) or (index.column() == 2): #Start / End
-            editor.setEditText(value)
-        elif (index.column() == 7) or (index.column() == 8):  #Day Rate / Night Rate
-            editor.setEditText(value)
-
-    def createEditor(self, parent, option, index, master):
-        if not index.isValid():
-            return 0
-        if (index.column() == 0): #Date
-            editor=QtWidgets.QDateEdit(parent)
-        elif (index.column() == 1) or (index.column() == 2): #Start / End
-            editor=QtWidgets.QLineEdit(parent)
-            editor.setInputMask("hh:MM")
-        elif (index.column() == 7): #Day Rate / Night Rate
-            editor=QtWidgets.QComboBox(parent)
-            for payrate in self.payrates:
-                editor.addItem(master.payrates[payrate].dayrate)
+    def createEditor(self, parent, option, index):
+        # This populates the combobox when editing a shift, with a list of pay rates
+        # At the moment it populates with all pay rates
+        # TODO, figure out how to only list payrates that match the shift start date
+        editor = QtWidgets.QComboBox(parent)
+        if (index.column() == 7):
+            for _ in range(len(self.payratelist)):
+                editor.addItem(str(self.payratelist[_].dayrate))
         elif (index.column() == 8):
-            editor=QtWidgets.QComboBox(parent)
+            for _ in range(len(self.payratelist)):
+                editor.addItem(str(self.payratelist[_].nightrate))
         return editor
 
     def setModelData(self, editor, model, index):
         if not index.isValid():
             return 0
-        if (index.column() == 1) or (index.column() == 2): #Date From or To
-            index.model().setData(index, editor.date(), QtCore.Qt.EditRole)
-        elif (index.column() == 3) or (index.column() == 4):  # Day or Night Rate
-            index.model().setData(index, editor.text(), QtCore.Qt.EditRole)
-        elif (index.column() == 5):
-            index.model().setData(index, editor.text(), QtCore.Qt.EditRole)
+        else:
+            index.model().setData(index, editor.currentText(), QtCore.Qt.EditRole)
         return
-
 
 class ShiftTableView(QtWidgets.QTableView):
     def __init__(self, master, showfrom, showto):
@@ -154,70 +139,34 @@ class ShiftTableView(QtWidgets.QTableView):
         self.requested_length=self.requested_to-self.requested_from
         self.model = ShiftTableModel(master,self.requested_from, self.requested_to)
         self.setModel(self.model)
-        self.setSelectionBehavior(QtWidgets.QTableView.SelectItems)
+        self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
         self.resizeRowsToContents()
-        self.resizeColumnsToContents()
+        self.setCornerButtonEnabled(True)
+        self.setColumnWidth(0,140) #Date
+        self.setColumnWidth(1,80) #Start
+        self.setColumnWidth(2,80) #End
+        self.setColumnWidth(3,80) #Total Length
+        self.setColumnWidth(4,80) #Day Length
+        self.setColumnWidth(5,80) #Night Length
+        self.setColumnWidth(6,80) #Unpaid
         self.setAlternatingRowColors(True)
-        self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        self.setItemDelegate(ShiftTableDelegate(master))
-
-        master.logbox.info('Viewing : ' + str(self.model.grantedall_shifts) + '/' + str(len(master.all_shifts)) + ' shifts')
+        self.setItemDelegateForColumn(7, PayRateComboBoxDelegate(master))
+        self.setItemDelegateForColumn(8, PayRateComboBoxDelegate(master))
+        master.logbox.info('Viewing : ' + str(self.model.grantedshiftlist) + '/' + str(len(master.shiftlist)) + ' shifts')
 
     def sizeHintForRow(self, p_int):
         return 20
-
-class TableCalendarWidget(QtWidgets.QDateEdit):
-    def __init__(self, parent = None):
-        super(TableCalendarWidget, self).__init__(parent)
-        self.setCalendarPopup(True)
-
-class PayRateTableDelegate(QtWidgets.QStyledItemDelegate):
-    def __init__(self):
-        QtWidgets.QStyledItemDelegate.__init__(self)
-
-    def setEditorData(self, editor, index):
-        value=index.model().data(index,QtCore.Qt.EditRole)
-        if (index.column() == 1) or (index.column() == 2): #Date From or To
-            editor.setDate(value)
-        elif (index.column() == 3) or (index.column() == 4):  # Day or Night Rate
-            editor.setText(value)
-        elif (index.column() == 5):
-            editor.setText("")
-
-    def createEditor(self, parent, option, index):
-        if not index.isValid():
-            return 0
-        if (index.column() == 1) or (index.column() == 2): #Date From or To
-            editor=QtWidgets.QDateEdit(parent)
-        elif (index.column() == 3) or (index.column() == 4): #Day or Night Rate
-            editor=QtWidgets.QLineEdit(parent)
-            editor.setInputMask("00.0000")
-        elif index.column() ==5: #Comments
-            editor=QtWidgets.QLineEdit(parent)
-        return editor
-
-    def setModelData(self, editor, model, index):
-        if not index.isValid():
-            return 0
-        if (index.column() == 1) or (index.column() == 2): #Date From or To
-            index.model().setData(index, editor.date(), QtCore.Qt.EditRole)
-        elif (index.column() == 3) or (index.column() == 4):  # Day or Night Rate
-            index.model().setData(index, editor.text(), QtCore.Qt.EditRole)
-        elif (index.column() == 5):
-            index.model().setData(index, editor.text(), QtCore.Qt.EditRole)
-        return
 class PayRateTableView(QtWidgets.QTableView):
     def __init__(self, master):
         QtWidgets.QTableView.__init__(self)
         self.model = PayRateTableModel(master)
-        self.verticalHeader().setVisible(False)
+        # self.verticalHeader().setVisible(False)
         self.setModel(self.model)
         self.setSelectionBehavior(QtWidgets.QTableView.SelectItems)
         self.resizeRowsToContents()
         self.resizeColumnsToContents()
         self.setAlternatingRowColors(True)
         self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        self.setItemDelegate(PayRateTableDelegate())
 
     def sizeHintForRow(self, p_int):
         return 20

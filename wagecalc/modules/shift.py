@@ -7,7 +7,7 @@ from data import Shift
 
 def clear_shift_data(self):
     try:
-        del self.all_shifts
+        del self.shiftlist
     except Exception:
         return
 
@@ -32,12 +32,14 @@ def main(self):
 
     init_gui(self)
 
+
 def init_gui(self):
     self.mod_shift = gui.Module(self, "Shift Management")
 
     act_import = gui.TAction("Import", self.mod_shift.tbar, lambda: import_shifts(self))
     act_load = gui.TAction("Load All", self.mod_shift.tbar, lambda: load_shifts(self))
     act_save = gui.TAction("Save All", self.mod_shift.tbar, lambda: save_shifts(self))
+    act_payrates = gui.TAction("Update All Pay Rates", self.mod_shift.tbar, lambda: update_payrates(self))
     act_sort = gui.TAction("Sort", self.mod_shift.tbar, lambda: sort_shifts(self))
     act_refresh = gui.TAction("Refresh", self.mod_shift.tbar, lambda: refresh_view(self))
     act_new = gui.TAction("New Shift", self.mod_shift.tbar, lambda: new_shift(self))
@@ -87,7 +89,7 @@ def insert_shift(self):
     newshift_start = datetime.combine(input_date.date(),input_start.time())
     newshift_end = datetime.combine(input_date.date(),input_end.time())
     shift_obj=Shift(newshift_start,newshift_end,0)
-    self.all_shifts.append(shift_obj)
+    self.shiftlist.append(shift_obj)
     self.win_newshift.close()
     refresh_view(self)
 def new_shift(self):
@@ -102,7 +104,7 @@ def new_shift(self):
     self.newshift_end=QtWidgets.QTimeEdit()
 
     newshift_accept=QtWidgets.QPushButton("Accept")
-    newshift_accept.clicked.connect(lambda: insert_shift(self)) #now to get this to update self.all_shifts
+    newshift_accept.clicked.connect(lambda: insert_shift(self)) #now to get this to update self.shiftlist
     newshift_cancel=QtWidgets.QPushButton("Cancel")
     newshift_cancel.clicked.connect(self.win_newshift.close)
     button_layout=QtWidgets.QHBoxLayout()
@@ -124,28 +126,38 @@ def new_shift(self):
 
     self.win_newshift.show()
 
+def update_payrates(self):
+    for _shift in range(len(self.shiftlist)):
+        date = self.shiftlist[_shift].start.date()
+        for _payrate in range(len(self.payratelist)):
+            if date >= self.payratelist[_payrate].datefrom and date <= self.payratelist[_payrate].dateto:
+                self.shiftlist[_shift].nightrate = self.payratelist[_payrate].nightrate
+                result="Match : " + str(_shift)
+            else:
+                result="No match"
+            print("Checking shift :",date,"PayRate FROM :",self.payratelist[_payrate].datefrom,"TO: ",self.payratelist[_payrate].dateto,"Result :",result)
 
 def import_shifts(self):
     filename=QtWidgets.QFileDialog.getOpenFileName(initialFilter=".csv", directory=".",options=QtWidgets.QFileDialog.DontUseNativeDialog)[0]
     if filename:
-        self.all_shifts = wagecalc.file.file_import_shifts(filename)
+        self.shiftlist = wagecalc.file.import_shiftlist(filename)
         self.logbox.info("Shifts imported from file")
         refresh_view(self)
 def load_shifts(self):
     try:
-        return wagecalc.file.file_load_shifts()
+        return wagecalc.file.load_shiftlist()
     except:
         self.logbox.error("Shifts Failed to Load")
 def save_shifts(self):
     try:
-        wagecalc.file.file_save_shifts(self.all_shifts)
+        wagecalc.file.save_shiftlist(self.shiftlist)
         self.logbox.info("Shifts Saved")
     except:
         self.logbox.error("Shifts Failed to Save")
 def sort_shifts(self):
-    if hasattr(self, "all_shifts") and len(self.all_shifts) > 0:
-        all_shifts_sorted = sorted(self.all_shifts, key=lambda k: k.start)
-        self.all_shifts = all_shifts_sorted
+    if hasattr(self, "shiftlist") and len(self.shiftlist) > 0:
+        shiftlist_sorted = sorted(self.shiftlist, key=lambda k: k.start)
+        self.shiftlist = shiftlist_sorted
         refresh_view(self)
         self.logbox.info("Data sorted")
     else:

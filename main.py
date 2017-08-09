@@ -3,7 +3,7 @@ from PyQt5 import QtCore,QtGui,QtWidgets
 from modules import shift,rota,payperiod,payrate,wage,contract,setup
 import gui
 from options import APPTITLE,APPHEIGHT,APPWIDTH
-import logging
+
 
 class App(QtWidgets.QMainWindow):
     def __init__(self):
@@ -46,8 +46,8 @@ class App(QtWidgets.QMainWindow):
 
     def initialise_data(self):
         try:
-            self.all_shifts = shift.load_shifts(self)
-            self.payrates = payrate.load_data_payrate(self)
+            self.shiftlist = shift.load_shifts(self)
+            self.payratelist = payrate.load_data_payrate(self)
             self.logbox.info("All Data Loaded")
         except Exception:
             self.logbox.error("Not All Data is Loaded")

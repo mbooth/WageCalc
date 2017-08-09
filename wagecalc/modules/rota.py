@@ -49,7 +49,7 @@ def insert_shift(self):
     newshift_start = datetime.combine(input_date.date(),input_start.time())
     newshift_end = datetime.combine(input_date.date(),input_end.time())
     shift_obj=Shift(newshift_start,newshift_end,0)
-    self.all_shifts.append(shift_obj)
+    self.shiftlist.append(shift_obj)
     self.win_newshift.close()
     refresh_shiftlist_view(self)
 
@@ -72,7 +72,7 @@ def new_shift(self):
     self.newshift_end.setAlignment(QtCore.Qt.AlignCenter)
 
     newshift_accept=QtWidgets.QPushButton("Accept")
-    newshift_accept.clicked.connect(lambda: insert_shift(self)) #now to get this to update self.all_shifts
+    newshift_accept.clicked.connect(lambda: insert_shift(self)) #now to get this to update self.shiftlist
     newshift_cancel=QtWidgets.QPushButton("Cancel")
     newshift_cancel.clicked.connect(self.win_newshift.close)
     button_layout=QtWidgets.QHBoxLayout()
@@ -100,6 +100,6 @@ def new_shift(self):
 def import_shift_data(self):
     filename=QtWidgets.QFileDialog.getOpenFileName(initialFilter=".csv", directory=".",options=QtWidgets.QFileDialog.DontUseNativeDialog)[0]
     if filename:
-        self.all_shifts = wagecalc.file.file_import_shifts(filename)
+        self.shiftlist = wagecalc.file.import_shiftlist(filename)
         self.logbox.info("Shifts imported from file")
         refresh_shiftlist_view(self)
