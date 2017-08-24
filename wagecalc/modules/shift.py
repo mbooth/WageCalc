@@ -1,5 +1,7 @@
 from PyQt5 import QtWidgets,QtGui,QtCore
 from datetime import datetime, timedelta
+
+import view
 import wagecalc.file
 import gui
 
@@ -10,7 +12,6 @@ def clear_shift_data(self):
         del self.shiftlist
     except Exception:
         return
-
 def refresh_view(self):
     try:
         self.mod_shift.tv.close()
@@ -20,10 +21,8 @@ def refresh_view(self):
     self.mod_shift.showfrom=qnewdatefrom.toPyDate()
     qnewdateto=self.mod_shift.dateto_picker.datewidget.date()
     self.mod_shift.showto=qnewdateto.toPyDate()
-    self.mod_shift.tv = gui.ShiftTableView(self, self.mod_shift.showfrom, self.mod_shift.showto)
+    self.mod_shift.tv = view.ShiftTableView(self, self.mod_shift.showfrom, self.mod_shift.showto)
     self.mod_shift.setCentralWidget(self.mod_shift.tv)
-
-
 def main(self):
     try:
         self.mod_shift.close()
@@ -32,7 +31,6 @@ def main(self):
 
     init_gui(self)
 
-
 def init_gui(self):
     self.mod_shift = gui.Module(self, "Shift Management")
 
@@ -40,9 +38,9 @@ def init_gui(self):
     act_load = gui.TAction("Load All", self.mod_shift.tbar, lambda: load_shifts(self))
     act_save = gui.TAction("Save All", self.mod_shift.tbar, lambda: save_shifts(self))
     act_payrates = gui.TAction("Update All Pay Rates", self.mod_shift.tbar, lambda: update_payrates(self))
-    act_sort = gui.TAction("Sort", self.mod_shift.tbar, lambda: sort_shifts(self))
     act_refresh = gui.TAction("Refresh", self.mod_shift.tbar, lambda: refresh_view(self))
     act_new = gui.TAction("New Shift", self.mod_shift.tbar, lambda: new_shift(self))
+    act_db= gui.TAction("Convert to DB", self.mod_shift.tbar, lambda: convert_to_db(self))
     self.act_filter = gui.TAction("Filter", self.mod_shift.tbar, lambda: filter(self))
     self.act_filter.setCheckable(True)
     self.act_filter.setChecked(False)
@@ -64,6 +62,7 @@ def init_gui(self):
     gui.TSpacer(self.mod_shift.datebar)
 
     refresh_view(self)
+
 
 def filter(self):
     if self.act_filter.isChecked():
@@ -88,7 +87,8 @@ def insert_shift(self):
     input_end = datetime.strptime(self.newshift_end.text(),'%H:%M')
     newshift_start = datetime.combine(input_date.date(),input_start.time())
     newshift_end = datetime.combine(input_date.date(),input_end.time())
-    shift_obj=Shift(newshift_start,newshift_end,0)
+    shift_obj=Shift(newshift_start,newshift_end)
+    shift_obg=Shift()
     self.shiftlist.append(shift_obj)
     self.win_newshift.close()
     refresh_view(self)
@@ -145,23 +145,16 @@ def import_shifts(self):
         refresh_view(self)
 def load_shifts(self):
     try:
-        return wagecalc.file.load_shiftlist()
+        return wagecalc.file.load_shiftlist_file()
     except:
         self.logbox.error("Shifts Failed to Load")
 def save_shifts(self):
     try:
-        wagecalc.file.save_shiftlist(self.shiftlist)
+        wagecalc.file.save_shiftlist_file(self.shiftlist)
         self.logbox.info("Shifts Saved")
     except:
         self.logbox.error("Shifts Failed to Save")
-def sort_shifts(self):
-    if hasattr(self, "shiftlist") and len(self.shiftlist) > 0:
-        shiftlist_sorted = sorted(self.shiftlist, key=lambda k: k.start)
-        self.shiftlist = shiftlist_sorted
-        refresh_view(self)
-        self.logbox.info("Data sorted")
-    else:
-        self.logbox.info("No data to sort")
+
 
 
 

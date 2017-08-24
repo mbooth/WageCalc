@@ -1,5 +1,7 @@
 from PyQt5 import QtWidgets,QtGui,QtCore
 from datetime import datetime, timedelta
+
+import view
 import wagecalc.file
 import gui
 
@@ -13,7 +15,7 @@ def clear_rotalist_view(self):
     except:
         return
 def init_rotalist_view(self):
-    self.mod_shift.tv = gui.ShiftTableView(self, self.mod_shift.showfrom, self.mod_shift.showto)
+    self.mod_shift.tv = view.ShiftTableView(self, self.mod_shift.showfrom, self.mod_shift.showto)
     self.mod_shift.setCentralWidget(self.mod_shift.tv)
 
 def refresh_rotalist_view(self):

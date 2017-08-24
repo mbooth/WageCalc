@@ -1,13 +1,30 @@
-from PyQt5 import QtWidgets,QtGui,QtCore
-from datetime import date,datetime,timedelta
-from data import ShiftTableModel
-from data import PayRateTableModel
 import logging
-import tkinter
-from tkinter import ttk
-from wagecalc.modules.shift import refresh_view
-from wagecalc.modules.payrate import refresh_view
+from PyQt5 import QtWidgets, QtCore, QtGui
 
+
+class PayRateValidator(QtGui.QDoubleValidator):
+    def __init__(self):
+        QtGui.QDoubleValidator.__init__(self, 0.0001,9999.999999, 4)
+
+class InputPayRate(QtWidgets.QLineEdit):
+    def __init__(self):
+        QtWidgets.QLineEdit.__init__(self)
+        self.setValidator(QtGui.QDoubleValidator(0.0001,9999.999999, 4))
+        self.setAlignment(QtCore.Qt.AlignCenter)
+        self.setText("00.0000")
+        self.textChanged.connect(self.check_state)
+        self.textChanged.emit(self.text())
+
+    def check_state(self, *args, **kwargs):
+        validator = self.validator()
+        state = validator.validate(self.text(), 0)[0]
+        if state == QtGui.QValidator.Acceptable:
+            color = '#c4df9b'  # green
+        elif state == QtGui.QValidator.Intermediate:
+            color = '#fff79a'  # yellow
+        else:
+            color = '#f6989d'  # red
+        self.setStyleSheet('QLineEdit { background-color: %s }' % color)
 class QtLogHandler(logging.Handler):
     def __init__(self,parent):
         logging.Handler.__init__(self)
@@ -104,69 +121,3 @@ class TDatePicker(QtWidgets.QDialog):
 
     # def updated(self,master):
     #     refresh_view(master)
-
-class PayRateComboBoxDelegate(QtWidgets.QStyledItemDelegate):
-    def __init__(self, parent):
-        self.payratelist=parent.payratelist
-        self.shiftlist=parent.shiftlist
-        QtWidgets.QStyledItemDelegate.__init__(self, parent)
-
-    def createEditor(self, parent, option, index):
-        # This populates the combobox when editing a shift, with a list of pay rates
-        # At the moment it populates with all pay rates
-        # TODO, figure out how to only list payrates that match the shift start date
-        editor = QtWidgets.QComboBox(parent)
-        if (index.column() == 7):
-            for _ in range(len(self.payratelist)):
-                editor.addItem(str(self.payratelist[_].dayrate))
-        elif (index.column() == 8):
-            for _ in range(len(self.payratelist)):
-                editor.addItem(str(self.payratelist[_].nightrate))
-        return editor
-
-    def setModelData(self, editor, model, index):
-        if not index.isValid():
-            return 0
-        else:
-            index.model().setData(index, editor.currentText(), QtCore.Qt.EditRole)
-        return
-
-class ShiftTableView(QtWidgets.QTableView):
-    def __init__(self, master, showfrom, showto):
-        QtWidgets.QTableView.__init__(self)
-        self.requested_from=showfrom
-        self.requested_to=showto
-        self.requested_length=self.requested_to-self.requested_from
-        self.model = ShiftTableModel(master,self.requested_from, self.requested_to)
-        self.setModel(self.model)
-        self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
-        self.resizeRowsToContents()
-        self.setCornerButtonEnabled(True)
-        self.setColumnWidth(0,140) #Date
-        self.setColumnWidth(1,80) #Start
-        self.setColumnWidth(2,80) #End
-        self.setColumnWidth(3,80) #Total Length
-        self.setColumnWidth(4,80) #Day Length
-        self.setColumnWidth(5,80) #Night Length
-        self.setColumnWidth(6,80) #Unpaid
-        self.setAlternatingRowColors(True)
-        self.setItemDelegateForColumn(7, PayRateComboBoxDelegate(master))
-        self.setItemDelegateForColumn(8, PayRateComboBoxDelegate(master))
-        master.logbox.info('Viewing : ' + str(self.model.grantedshiftlist) + '/' + str(len(master.shiftlist)) + ' shifts')
-
-    def sizeHintForRow(self, p_int):
-        return 20
-class PayRateTableView(QtWidgets.QTableView):
-    def __init__(self, master):
-        QtWidgets.QTableView.__init__(self)
-        self.model = PayRateTableModel(master)
-        # self.verticalHeader().setVisible(False)
-        self.setModel(self.model)
-        self.setSelectionBehavior(QtWidgets.QTableView.SelectItems)
-        self.resizeRowsToContents()
-        self.resizeColumnsToContents()
-        self.setAlternatingRowColors(True)
-        self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-
-    def sizeHintForRow(self, p_int):
-        return 20

@@ -1,16 +1,20 @@
+import os
 import sys
-from PyQt5 import QtCore,QtGui,QtWidgets
-from modules import shift,rota,payperiod,payrate,wage,contract,setup
+from PyQt5 import QtCore,QtGui,QtWidgets, QtSql
+
+import database
+from modules import shift,rota,payperiod,payrate,wage,contract
 import gui
-from options import APPTITLE,APPHEIGHT,APPWIDTH
+import file
+from pprint import pprint
+import traceback
 
-
-class App(QtWidgets.QMainWindow):
+class WageCalcApp(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.resize(APPWIDTH, APPHEIGHT)
-        self.move(1000, 100)
-        self.setWindowTitle(APPTITLE)
+        self.resize(1000, 1200)
+        self.move(800, 100)
+        self.setWindowTitle("Wage Calculator")
         self.create_gui()
         self.show()
         self.setStyle(QtWidgets.QStyleFactory.create('Macintosh'))
@@ -37,7 +41,6 @@ class App(QtWidgets.QMainWindow):
         self.btn_payperiod = gui.LargeButton(self.module_selector, text="Pay Periods", command=lambda: self.callback_payperiod())
         self.btn_contract = gui.LargeButton(self.module_selector, text="Contract", command=lambda: self.callback_contract())
         self.btn_payrate = gui.LargeButton(self.module_selector, text="Pay Rates", command=lambda: self.callback_payrate())
-        self.btn_setup = gui.LargeButton(self.module_selector, text="Setup", command=lambda: self.callback_setup())
         self.module_selector.layout.addStretch()
         self.btn_exit = gui.LargeButton(self.module_selector, text="Exit", command=lambda: self.callback_exit())
         self.logbox = gui.LogBox()
@@ -47,10 +50,22 @@ class App(QtWidgets.QMainWindow):
     def initialise_data(self):
         try:
             self.shiftlist = shift.load_shifts(self)
-            self.payratelist = payrate.load_data_payrate(self)
             self.logbox.info("All Data Loaded")
         except Exception:
             self.logbox.error("Not All Data is Loaded")
+
+        self.db=QtSql.QSqlDatabase.addDatabase('QSQLITE')
+        self.db.setDatabaseName('wagecalc/data/wagecalc.db')
+
+        if self.db.isValid():
+            self.logbox.info("Database is Valid")
+        else:
+            self.logbox.error("Database is not Valid")
+        if not self.db.open():
+            self.logbox.error("Could not open database.")
+            self.logbox.error("Text: " + self.db.lastError().text())
+            self.logbox.error("Type: " + str(self.db.lastError().type()))
+            self.logbox.error("Number: " + str(self.db.lastError().number()))
 
     def callback_shift(self):
         shift.main(self)
@@ -70,13 +85,15 @@ class App(QtWidgets.QMainWindow):
     def callback_payrate(self):
         payrate.main(self)
 
-    def callback_setup(self):
-        setup.main(self)
-
-
     def callback_exit(self):
-        print("Exiting " + str(APPTITLE))
+        database.close_db(self)
+        print("Exiting")
         exit()
 
 
-application=QtWidgets.QApplication(sys.argv)
+if __name__ == '__main__':
+    application = QtWidgets.QApplication(sys.argv)
+    os.system('''/usr/bin/osascript -e 'tell app "Finder" to set frontmost of process "Python" to true' ''')
+    app = WageCalcApp()
+    font=app.font()
+    application.exec()
